@@ -4,7 +4,12 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Button, Colors } from 'react-native-ui-lib';
+import Button from 'react-native-ui-lib/button';
+import Card from 'react-native-ui-lib/card';
+import { Colors } from 'react-native-ui-lib/style';
+import Text from 'react-native-ui-lib/text';
+import View from 'react-native-ui-lib/view';
+import { Icon } from 'react-native-ui-lib';
 
 export default function HomeScreen() {
   return (
@@ -21,7 +26,75 @@ export default function HomeScreen() {
         <HelloWave />
       </ThemedView>
 
-      <Button label={'Press'} size={Button.sizes.medium} backgroundColor={Colors.red30}/>
+      <Card flex center onPress={() => console.log('pressed')}>
+        {/* <Card.Image source={{uri: 'https://github.com/wix/react-native-ui-lib/blob/master/demo/src/assets/images/card-example.jpg'}}/>
+        <Card.Image source={{uri: 'https://github.com/wix/react-native-ui-lib/blob/master/demo/src/assets/images/card-example.jpg'}} height={115}/> */}
+        <Card.Section
+          content={[{text: 'Card content here', text70: true, grey10: true}]}
+          contentStyle={{alignItems: 'center'}}
+        />
+      </Card>
+
+      {/* onPress={() => {}}  */}
+      <Card marginR-10 flex height={160} activeOpacity={1} activeScale={0.96}>
+        <Card.Section
+          bg-$backgroundDangerHeavy
+          padding-20
+          flex-3
+          content={[
+            {text: 'Special sale!', text70: true, $textDefaultLight: true},
+            {text: '10%', text60: true, $textDefaultLight: true}
+          ]}
+          contentStyle={{alignItems: 'center'}}
+        />
+        <Card.Section
+          bg-$backgroundElevated
+          padding-20
+          flex
+          content={[{text: 'All site', text70: true, $textDefault: true}]}
+          contentStyle={{alignItems: 'center', margin: 0, padding: 0}}
+        />
+      </Card>
+
+      <Card
+          key={0}
+          style={{marginBottom: 15}}
+        >
+          <Card.Section
+            imageStyle={{height: 160}}
+          />
+
+          <View padding-20>
+            <Text text40 $textDefault>
+              {'Amazing Desert'}
+            </Text>
+            <View row>
+              <Text text90 color={Colors.$textSuccess}>
+                {'Published'}
+              </Text>
+              <Text text90 $textDefault> | {'31 August 2016'}</Text>
+            </View>
+
+            <Text text70 $textDefault>
+              {'Reference this table when designing your app’s interface, and make sure'}
+            </Text>
+
+            <View>
+              <Text text90 $textDisabled>
+                {355} Likes
+              </Text>
+              <View row right>
+                <Button
+                  style={{marginRight: 10}}
+                  text90
+                  link
+                  label="Feature"
+                />
+                <Button text90 link label="Share"/>
+              </View>
+            </View>
+          </View>
+        </Card>
     </ParallaxScrollView>
   );
 }
