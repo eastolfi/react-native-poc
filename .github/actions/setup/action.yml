@@ -1,0 +1,78 @@
+name: Setup
+description: Setup and install dependencies
+
+inputs:
+  dart:
+    description: 'Dart version'
+    required: false
+  flutter:
+    description: 'Flutter version'
+    required: false
+  java:
+    description: 'Java version'
+    required: false
+  node:
+    description: 'NodeJS version'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    ### FLUTTER ###
+
+    - name: Check dart
+      if: ${{ inputs.dart != '' && inputs.flutter != '' }}
+      run: echo "Setting up Flutter ${{ inputs.flutter }} with Dart ${{ inputs.dart }}"
+      shell: bash
+
+    - name: Setup Dart
+      if: ${{ inputs.dart != '' && inputs.flutter != '' }}
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: ${{ inputs.dart }}
+
+    - name: Setup Flutter
+      if: ${{ inputs.dart != '' && inputs.flutter != '' }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter }}
+        channel: 'stable'
+        cache: true
+
+    - name: Get dependencies (Flutter)
+      if: ${{ inputs.dart != '' && inputs.flutter != '' }}
+      run: flutter pub get
+      shell: bash
+
+    ### JAVA ###
+
+    - name: Check java
+      if: ${{ inputs.java != '' }}
+      run: echo "Setting up Java JDK ${{ inputs.java }}"
+      shell: bash
+
+    - name: Setup Java JDK
+      if: ${{ inputs.java != '' }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ inputs.java }}
+        cache: 'gradle'
+
+    ### NODE ###
+
+    - name: Check node
+      if: ${{ inputs.node != '' }}
+      run: echo "Setting up Node JS ${{ inputs.node }}"
+      shell: bash
+
+    - name: Setup Node JS
+      if: ${{ inputs.node != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node }}
+
+    - name: Get dependencies (NPM)
+      if: ${{ inputs.node != '' }}
+      run: npm ci
+      shell: bash

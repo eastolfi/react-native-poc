@@ -1,0 +1,181 @@
+on:
+  push:
+    branches: [ 'master' ]
+  # pull_request:
+  #   branches: [ 'master' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# https://docs.github.com/en/actions/using-jobs/using-environments-for-jobs
+# https://docs.github.com/es/actions/deployment/targeting-different-environments/using-environments-for-deployment
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          # dart: 3.3.3
+          # flutter: 3.19.5
+          node: 20.x
+
+      - name: Run tests
+        run: npm run test.ci
+  release:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          node: 20.x
+
+      # - name: Start semantic release
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   # run: npx semantic-release --extends "./release/release.json"
+      #   run: npx semantic-release
+
+      # - name: Upload Release Notes
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: release-notes
+      #     path: release_notes.txt
+
+  ios:
+    runs-on: macos-latest
+    environment: production
+    needs: release
+
+    steps:
+      # Force recovery of latest commit
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup android build
+        uses: ./.github/actions/setup
+        with:
+          # dart: 3.3.3
+          # flutter: 3.19.5
+          # java: 17
+          node: 20.x
+
+      - name: IOS
+        run: npm run ios
+
+      - name: check Xcode version
+        run: /usr/bin/xcodebuild -version
+
+
+  android:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: release
+
+    steps:
+      # Force recovery of latest commit
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup android build
+        uses: ./.github/actions/setup
+        with:
+          # dart: 3.3.3
+          # flutter: 3.19.5
+          java: 17
+
+      # - name: Start android build
+      #   uses: ./.github/actions/build/android
+      #   with:
+      #     ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      #     STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      #     KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      #     KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+
+      # - name: Publish android build
+      #   uses: ./.github/actions/publish/android
+      #   with:
+      #     GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      #     PUBLISH_CHANNEL: internal
+
+  # https://angeloavv.medium.com/how-to-distribute-flutter-desktop-app-binaries-using-github-actions-f8d0f9be4d6b
+  # windows:
+  #   runs-on: windows-latest
+  #   environment: production
+  #   needs: release
+
+  #   steps:
+  #     # Force recovery of latest commit
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.ref }}
+
+  #     - name: Setup windows build
+  #       uses: ./.github/actions/setup
+  #       with:
+  #         dart: 3.3.3
+  #         flutter: 3.19.5
+  #         java: 17
+
+  #     - name: Start windows build
+  #       uses: ./.github/actions/build/windows
+
+  # github-release:
+  #   runs-on: ubuntu-latest
+  #   needs: [ android, windows ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+  #         fetch-depth: 0
+
+  #     - name: Download Android Bundle
+  #       uses: actions/download-artifact@v4
+  #       # uses: dawidd6/action-download-artifact@v3
+  #       with:
+  #         # workflow: android-release.yml
+  #         name: android-bundle
+
+  #     - name: Download Android APK
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: android-apk
+
+  #     - name: Download Windows zip
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: windows
+
+  #     - name: Download release notes
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: release-notes
+
+  #     - name: Get release tag
+  #       id: release-tag
+  #       uses: WyriHaximus/github-action-get-previous-tag@v1
+
+  #     - name: Create Github Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         tag_name: "${{ steps.release-tag.outputs.tag }}"
+  #         # generate_release_notes: true
+  #         body_path: release_notes.txt
+  #         # Android APK
+  #         # Android Bundle
+  #         files: |
+  #           app-release.aab
+  #           app-release.apk
+  #           accounting.msix

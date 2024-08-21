@@ -1,0 +1,56 @@
+name: Build Android
+description: Build and upload Android Binaries
+
+inputs:
+  ANDROID_KEYSTORE_BASE64:
+    description: 'Android keystore in Base64'
+    required: true
+  STORE_PASSWORD:
+    description: 'Store password'
+    required: true
+  KEY_PASSWORD:
+    description: 'Store key password'
+    required: true
+  KEY_ALIAS:
+    description: 'Store key alias'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download Android keystore
+      id: android_keystore
+      uses: timheuer/base64-to-file@v1.2
+      with:
+        fileName: upload-keystore.jks
+        encodedString: ${{ inputs.ANDROID_KEYSTORE_BASE64 }}
+
+    - name: Create key.properties
+      run: |
+        echo "storeFile=${{ steps.android_keystore.outputs.filePath }}" > android/key.properties
+        echo "storePassword=${{ inputs.STORE_PASSWORD }}" >> android/key.properties
+        echo "keyPassword=${{ inputs.KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=${{ inputs.KEY_ALIAS }}" >> android/key.properties
+      shell: bash
+
+    - name: Build native binaires
+      run: |
+        flutter build apk
+        flutter build appbundle
+      shell: bash
+
+    - name: Upload Android Release (Bundle)
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-bundle
+        path: build/app/outputs/bundle/release/app-release.aab
+
+    - name: Upload Android Release (APK)
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: build/app/outputs/apk/release/app-release.apk
+
+    # - id: random-number-generator
+    #   run: echo "::set-output name=random-id::$(echo $RANDOM)"
+    #   shell: bash
